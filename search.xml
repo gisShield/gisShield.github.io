@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>OpenLayers 基础 一：了解并简单构建</title>
+    <url>/2019/11/20/openlayers-start/</url>
+    <content><![CDATA[<blockquote>
+<p>现在互联网地图（<a href="http://lbsyun.baidu.com/" target="_blank" rel="noopener">百度地图</a>，<a href="https://lbs.amap.com/" target="_blank" rel="noopener">高德地图</a>）都提供了很好的API使用，简单易懂，可以很快的通过文档构建自己的地图显示。但是有些时候项目和产品中需要离线的地图展示，本系列文章只讲述项目中比较常用的一些知识点，不会对每个组件进行详细的介绍。</p>
+</blockquote><hr><p>OpenLayers 是一个开源的Web地图库,主要用于在Web段创建可交互式二维地图。本系列以6.0.1的版本进行讲解。</p><a id="more"></a>
+
+
+<p>官网：<a href="https://openlayers.org/" target="_blank" rel="noopener">OpenLayers</a></p>
+<p>源码：<a href="https://github.com/openlayers/openlayers" target="_blank" rel="noopener">GitHub</a></p>
+<h5 id="二、核心组件"><a href="#二、核心组件" class="headerlink" title="二、核心组件"></a>二、核心组件</h5><hr>
+<p><img src="https://i.loli.net/2019/11/20/soCPGMFzjB7wnLT.png" alt="组件构成"></p>
+<ol>
+<li>Map:一个入口，用于组织和管理各个组件对象，最后渲染成地图。</li>
+<li>View：用于控制地图中心点，显示范围，显示层级等</li>
+<li>Layers：主要用于生成不同种类的图层，进行叠加展示</li>
+<li>Controls：提供不同种类的交互控件（也可以自定义控件），用来实现用户通过控件和地图交互，或者用于提供一些信息。控件会固定在页面一个位置，不会跟随地图改变而改变位置。</li>
+<li>Interactions：用来定义用户和地图交互功能和交互方式。</li>
+<li>Sources：数据源，用来给Layers提供源数据，每一个Layers 都会有一个对应的Source用以提供数据。</li>
+</ol>
+<h5 id="三、快速开始"><a href="#三、快速开始" class="headerlink" title="三、快速开始"></a>三、快速开始</h5><hr>
+<ol>
+<li><p>npm引入</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install ol</span><br></pre></td></tr></table></figure>
+
+<p>或者你可以选择CDN引入方式</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v6.0.1/build/ol.js"</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">href</span>=<span class="string">"https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v6.0.1/css/ol.css"</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="2">
+<li><p>构建一个html</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">"en"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>OpenLayers<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css">        <span class="selector-id">#map</span> &#123;</span></span><br><span class="line">            width: 1000px;</span><br><span class="line">            height: 800px;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--  地图容器--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"map"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 引入初始化地图的JS--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"./js/demoMap.js"</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="3">
+<li><p>创建地图</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">'ol/ol.css'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123;<span class="built_in">Map</span>, View&#125; <span class="keyword">from</span> <span class="string">'ol'</span>;</span><br><span class="line"><span class="keyword">import</span> TileLayer <span class="keyword">from</span> <span class="string">'ol/layer/Tile'</span>;</span><br><span class="line"><span class="keyword">import</span> OSM <span class="keyword">from</span> <span class="string">'ol/source/OSM'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> map = <span class="keyword">new</span> <span class="built_in">Map</span>(&#123;</span><br><span class="line">    target: <span class="string">'map'</span>, <span class="comment">// 地图容器Id</span></span><br><span class="line">    <span class="comment">// 展示的图层</span></span><br><span class="line">    layers: [</span><br><span class="line">        <span class="keyword">new</span> TileLayer(&#123;</span><br><span class="line">            <span class="comment">// 数据源</span></span><br><span class="line">            source: <span class="keyword">new</span> OSM()</span><br><span class="line">        &#125;)</span><br><span class="line">    ],</span><br><span class="line">    <span class="comment">// 视图</span></span><br><span class="line">    view: <span class="keyword">new</span> View(&#123;</span><br><span class="line">        <span class="comment">// 中心点</span></span><br><span class="line">        center: [<span class="number">0</span>, <span class="number">0</span>],</span><br><span class="line">        <span class="comment">// 初始层级</span></span><br><span class="line">        zoom: <span class="number">0</span></span><br><span class="line">    &#125;)</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>这样就可以形成一个简单的地图出来</p>
+<p><img src="https://i.loli.net/2019/11/20/ObCEkrVJlRALqtv.png" alt="地图"></p>
+<hr>
+<h5 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h5><p>通过上面的 <em>快速开始</em> 可以看出，构建一个地图需要的必备属性：</p>
+<ul>
+<li>target ：地图容器的DIV</li>
+<li>view ：视图控制地图层级和中心点</li>
+<li>layers ：地图图层</li>
+</ul>
+<p>只要这三个部分组织完毕，一个基本的地图应用就可以使用了。</p>
+]]></content>
+      <categories>
+        <category>openlayers</category>
+      </categories>
+      <tags>
+        <tag>openlayers</tag>
+      </tags>
+  </entry>
+</search>
