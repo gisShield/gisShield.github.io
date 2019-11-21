@@ -3,7 +3,7 @@
   <entry>
     <title>OpenLayers 基础 一：了解并简单构建</title>
     <url>/2019/11/20/openlayers-start/</url>
-    <content><![CDATA[<blockquote>
+    <content><![CDATA[<h5 id="一、介绍"><a href="#一、介绍" class="headerlink" title="一、介绍"></a>一、介绍</h5><blockquote>
 <p>现在互联网地图（<a href="http://lbsyun.baidu.com/" target="_blank" rel="noopener">百度地图</a>，<a href="https://lbs.amap.com/" target="_blank" rel="noopener">高德地图</a>）都提供了很好的API使用，简单易懂，可以很快的通过文档构建自己的地图显示。但是有些时候项目和产品中需要离线的地图展示，本系列文章只讲述项目中比较常用的一些知识点，不会对每个组件进行详细的介绍。</p>
 </blockquote><hr><p>OpenLayers 是一个开源的Web地图库,主要用于在Web段创建可交互式二维地图。本系列以6.0.1的版本进行讲解。</p><a id="more"></a>
 
