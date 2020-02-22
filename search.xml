@@ -1,6 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>笔记【一】：MapBox 加载 ArcGIS 的WMS 服务跨域问题解决</title>
+    <url>/2020/02/22/note-arcgisserver-cors/</url>
+    <content><![CDATA[<h5 id="1-环境："><a href="#1-环境：" class="headerlink" title="1. 环境："></a>1. 环境：</h5><hr><ul>
+<li>ArcGIS Server 10.2</li>
+<li>MapBox-GL v 1.7</li>
+</ul><h5 id="2-问题描述："><a href="#2-问题描述：" class="headerlink" title="2. 问题描述："></a>2. 问题描述：</h5><hr><p>在使用ArcGIS 发布一个WMS 服务，同时用OpenLayers,LeafLet以及MapBox 加载，在OpenLayers和LeafLet 中均可正常加载，但在MapBox 中加载出现跨域请求现象</p><a id="more"></a>
+
+
+
+<p><img src="https://i.loli.net/2020/02/22/vd584MATnaHZB6S.png" alt="跨域报错"></p>
+<h5 id="3-产生原因："><a href="#3-产生原因：" class="headerlink" title="3.产生原因："></a>3.产生原因：</h5><hr>
+<p>通过查找文档以及Mapbox的GitHub 的issues 找到相关解释：<a href="https://github.com/mapbox/mapbox-gl-js/issues/2171" target="_blank" rel="noopener">原Issue</a></p>
+<p><img src="https://i.loli.net/2020/02/22/Is87CR1pvBS3MdD.png" alt="issue"></p>
+<p>读下来的大致意思是：mapbox 加载WMS是需要读取 image里的数据，但只有服务器允许跨域的情况下我们才可以这么做。而LeafLet 不需要读取数据，所以可以直接加载。</p>
+<p>那么知道产生原因，问题就好解决了。</p>
+<h5 id="4-解决方案"><a href="#4-解决方案" class="headerlink" title="4. 解决方案"></a>4. 解决方案</h5><ol>
+<li><p>下载 <a href="http://www.java2s.com/Code/Jar/c/Downloadcorsfilter17jar.htm" target="_blank" rel="noopener"><code>cors-filter-1.7.jar</code></a> 以及 <a href="http://www.java2s.com/example/jar/j/download-javapropertyutils19jar-file.html" target="_blank" rel="noopener"><code>java-property-utils-1.9.jar</code></a> 这两个jar 包用于设置Tomcat的跨域。</p>
+</li>
+<li><p>找到ArcGIS 安装目录下的<code>&lt;安装目录&gt;\framework\runtime\tomcat\lib</code> 将下载的jar 拷贝到该目录下<img src="https://i.loli.net/2020/02/22/KELbac8XRJAGTqw.png" alt="新加jar"></p>
+</li>
+<li><p>修改tomcat配置<code>&lt;安装目录&gt;\framework\runtime\tomcat\conf\web.xm</code></p>
+</li>
+<li><p>找到<code>&lt;filter&gt;</code> 同级的末尾追加如下XML代码：</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CORS<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>com.thetransactioncompany.cors.CORSFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.allowOrigin<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>*<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.supportedMethods<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>GET, POST, HEAD, PUT, DELETE<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.supportedHeaders<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>Accept, Origin, X-Requested-With, Content-Type, Last-Modified<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.exposedHeaders<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>Set-Cookie<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.supportsCredentials<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br><span class="line"></span><br><span class="line">	<span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CORS<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>找到window的服务，重启ArcGIS Server 服务<img src="https://i.loli.net/2020/02/22/duERTZomwyb4krB.png" alt="重启服务"></p>
+</li>
+<li><p>再次使用Mapbox 请求验证问题，已经可以正常请求到WMS服务。<img src="https://i.loli.net/2020/02/22/pMxzBHC78ZKwJVa.png" alt="效果.png"></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>笔记</category>
+      </categories>
+      <tags>
+        <tag>笔记</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>OpenLayers 基础 一：了解并简单构建</title>
     <url>/2019/11/20/openlayers-start/</url>
     <content><![CDATA[<h5 id="一、介绍"><a href="#一、介绍" class="headerlink" title="一、介绍"></a>一、介绍</h5><blockquote>
