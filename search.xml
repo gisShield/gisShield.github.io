@@ -1,6 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>【笔记二】将Springboot 程序注册成Win服务</title>
+    <url>/2021/01/23/springboot-to-service/</url>
+    <content><![CDATA[<h4 id="一、前期准备"><a href="#一、前期准备" class="headerlink" title="一、前期准备"></a>一、前期准备</h4><ol>
+<li><p>Java 运行环境，配置环境变量等（这是<code>jar</code>包运行的必备环境）</p>
+</li>
+<li><p><a href="https://github.com/winsw/winsw" target="_blank" rel="noopener">Winsw</a>程序（本章主角）</p>
+</li>
+</ol><h4 id="二、注册步骤"><a href="#二、注册步骤" class="headerlink" title="二、注册步骤"></a>二、注册步骤</h4><ol>
+<li><p><a href="https://github.com/winsw/winsw" target="_blank" rel="noopener">下载安装包</a>：（这里下载最新的，可以按照需要下载自己需要的版本）</p>
+<p><img src="https://i.loli.net/2021/01/23/heRHBs8Uil17NzY.png" alt="image-20201215155347679.png"></p>
+<ul>
+<li>可以看到又很多<code>.NET</code>版本，<strong>可以先查看自身电脑<code>.NET</code>版本 再去下载对应版本</strong>。如果都没有的话，可以选择<code>.NETCore31</code>的版本，这个是带了<code>.NET 3.1</code>（以下是<code>README</code>写到的）</li>
+</ul>
+<p><img src="https://i.loli.net/2021/01/23/8wBq1Jt3IEyNMxH.png" alt="image-20201215160908858.png"></p>
+<ul>
+<li>查看自身<code>.NET</code>版本方法 ：<br>打开资源管理器，输入<code>C:\Windows\Microsoft.NET\Framework</code></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">![image-20201218172534768.png](https://cdn.nlark.com/yuque/0/2020/png/233662/1608531940981-ce2ba70e-6573-474d-8247-cc93784c65a0.png)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>下载对应版本的exe 以及xml：</li>
+</ul>
+<p><img src="https://i.loli.net/2021/01/23/t37cRsvNf8JUkFL.png" alt="image-20201218173541362.png"></p>
+</li>
+</ol><a id="more"></a>
+
+<ol start="2">
+<li><p>安装</p>
+<p>官方给出了<a href="https://github.com/winsw/winsw/blob/master/doc/installation.md" target="_blank" rel="noopener">安装指南</a>：</p>
+<p><img src="https://i.loli.net/2021/01/23/zIY2KXuygHGdUvM.png" alt="image-20201218172925043.png"></p>
+</li>
+</ol>
+<p>   步骤如下：</p>
+<ul>
+<li><p>将下载下来的exe 和 xml 放在<code>jar</code>同级目录下</p>
+<p><img src="https://i.loli.net/2021/01/23/KJCE1h6XrWyHoGv.png" alt="image-20201218174950800.png"></p>
+</li>
+<li><p>更改exe 和 xml 的文件名改为和<code>jar</code> 同名。（假如我的项目名为<code>install-service.jar</code> 则将 exe 和 xml 改名为<code>install-service.exe</code> 和 <code>install-service.xml</code>）</p>
+</li>
+<li><p>编辑xml 填写相关配置</p>
+<p><img src="https://i.loli.net/2021/01/23/aEQuIAN8iF9mTOd.png" alt="image-20201218175937848.png"></p>
+</li>
+<li><p>使用命令行 执行</p>
+<p><img src="https://i.loli.net/2021/01/23/GpKZ2OQmHIo4Pv3.png" alt="image-20201218180038791.png"></p>
+</li>
+<li><p>去服务查看下 找到服务 点击启动即可</p>
+<p><img src="https://i.loli.net/2021/01/23/L9YpxncAE5CuDzH.png" alt="image-20201218180132409.png"></p>
+</li>
+<li><p>访问自己的项目，查看是否启动成功</p>
+<p><img src="https://i.loli.net/2021/01/23/LVTEAaJDvcRO18p.png" alt="image-20201218180224985.png"></p>
+</li>
+</ul>
+<ol start="3">
+<li><p>卸载</p>
+<p><img src="https://i.loli.net/2021/01/23/Rv3fsbFhiM4Qt6p.png" alt="image-20201222093918592.png"></p>
+</li>
+</ol>
+<h4 id="三、其他"><a href="#三、其他" class="headerlink" title="三、其他"></a>三、其他</h4><p>除了可以将Springboot 程序注册成服务，它也可以用于其他程序注册成服务（比如 Nginx 也可以通过它注册成服务），包装万物成服务</p>
+]]></content>
+      <categories>
+        <category>笔记</category>
+      </categories>
+      <tags>
+        <tag>笔记</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>笔记【一】：MapBox 加载 ArcGIS 的WMS 服务跨域问题解决</title>
     <url>/2020/02/22/note-arcgisserver-cors/</url>
     <content><![CDATA[<h5 id="1-环境："><a href="#1-环境：" class="headerlink" title="1. 环境："></a>1. 环境：</h5><hr><ul>
