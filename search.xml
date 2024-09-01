@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>OpenLayers 添加滤镜改变底图样式</title>
+    <url>/2024/09/01/openlayers-filter/</url>
+    <content><![CDATA[<h4 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h4><p>&emsp;&emsp; 项目实施过程中，需要根据不同的业务场景需求变换地图样式。如果客户提供的底图服务或自建底图服务是类似<code>Mapbox</code>这种矢量切片，那只要按照需求配置不同的样式文件即可。如果没有矢量切片，只有一张张瓦片图如何实现呢？下面提供两种实现方式，以供参考</p><h4 id="二、准备工作"><a href="#二、准备工作" class="headerlink" title="二、准备工作"></a>二、准备工作</h4><blockquote>
+<p>首先要将完成地图的初始化</p>
+</blockquote><a id="more"></a>
+
+<ol>
+<li><p>添加地图DIV</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"app-container"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"map"</span> <span class="attr">ref</span>=<span class="string">"mapEl"</span> <span class="attr">class</span>=<span class="string">"map"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="2">
+<li><p>初始化地图</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//底图服务</span></span><br><span class="line"><span class="keyword">let</span> tdt_vec = <span class="keyword">new</span> TileLayer(&#123;</span><br><span class="line">  source: <span class="keyword">new</span> XYZ(&#123;</span><br><span class="line">    crossOrigin:<span class="string">'anonymous'</span>,</span><br><span class="line">    url: <span class="string">"http://t&#123;0-7&#125;.tianditu.com/DataServer?T=vec_w&amp;x=&#123;x&#125;&amp;y=&#123;y&#125;&amp;l=&#123;z&#125;&amp;tk="</span> + <span class="keyword">this</span>.mapKey,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// 注记服务</span></span><br><span class="line"><span class="keyword">let</span> tdt_cva = <span class="keyword">new</span> TileLayer(&#123;</span><br><span class="line">  source: <span class="keyword">new</span> XYZ(&#123;</span><br><span class="line">    crossOrigin:<span class="string">'anonymous'</span>,</span><br><span class="line">    url: <span class="string">"http://t&#123;0-7&#125;.tianditu.com/DataServer?T=cva_w&amp;x=&#123;x&#125;&amp;y=&#123;y&#125;&amp;l=&#123;z&#125;&amp;tk="</span> + <span class="keyword">this</span>.mapKey,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="keyword">this</span>.map = <span class="keyword">new</span> <span class="built_in">Map</span>(&#123;</span><br><span class="line">  target: <span class="string">'map'</span>,</span><br><span class="line">  view: <span class="keyword">new</span> View(&#123;</span><br><span class="line">    projection: <span class="string">'EPSG:4326'</span>,</span><br><span class="line">    center: [<span class="number">103.23</span>, <span class="number">35.33</span>],</span><br><span class="line">    zoom: <span class="number">12</span>,</span><br><span class="line">    maxZoom: <span class="number">18</span></span><br><span class="line">  &#125;),</span><br><span class="line">  layers: [tdt_vec,tdt_cva]</span><br><span class="line">&#125;)</span><br><span class="line"><span class="keyword">let</span> vlayer = <span class="keyword">new</span> VectorLayer(&#123;</span><br><span class="line">  source: <span class="keyword">new</span> VectorSource(&#123;</span><br><span class="line">    features: [<span class="keyword">new</span> Feature(&#123;</span><br><span class="line">      geometry: <span class="keyword">new</span> Point([<span class="number">103.23</span>, <span class="number">35.33</span>]),</span><br><span class="line">    &#125;)]</span><br><span class="line">  &#125;),</span><br><span class="line">  style: [<span class="keyword">new</span> Style(&#123;</span><br><span class="line">    image: <span class="keyword">new</span> Icon(&#123;</span><br><span class="line">      src: <span class="string">'https://openlayers.org/en/latest/examples/data/icon.png'</span>,</span><br><span class="line">      crossOrigin: <span class="string">'anonymous'</span>,</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)]</span><br><span class="line">&#125;)</span><br><span class="line"><span class="keyword">this</span>.map.addLayer(vlayer)</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<h4 id="三、实现方式"><a href="#三、实现方式" class="headerlink" title="三、实现方式"></a>三、实现方式</h4><ol>
+<li><p>第一种滤镜方式：通过绑定瓦片图层的<code>className</code>实现</p>
+<ul>
+<li>先添加一个<code>CSS</code>的滤镜样式</li>
+</ul>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*在CSS里添加滤镜代码*/</span></span><br><span class="line"><span class="selector-pseudo">::v-deep</span> <span class="selector-class">.filter-class</span> &#123;</span><br><span class="line">  <span class="attribute">filter</span>: <span class="built_in">grayscale</span>(98%) <span class="built_in">invert</span>(100%) <span class="built_in">sepia</span>(20%) <span class="built_in">hue-rotate</span>(180deg) <span class="built_in">saturate</span>(1600%) <span class="built_in">brightness</span>(80%) <span class="built_in">contrast</span>(90%);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ul>
+<li><p>对上面的底图追加<code>className</code></p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//底图服务</span></span><br><span class="line"><span class="keyword">let</span> tdt_vec = <span class="keyword">new</span> TileLayer(&#123;</span><br><span class="line">  className:<span class="string">'filter-class'</span>, <span class="comment">// 添加配置的样式Class</span></span><br><span class="line">  source: <span class="keyword">new</span> XYZ(&#123;</span><br><span class="line">    crossOrigin:<span class="string">'anonymous'</span>,</span><br><span class="line">    url: <span class="string">"http://t&#123;0-7&#125;.tianditu.com/DataServer?T=vec_w&amp;x=&#123;x&#125;&amp;y=&#123;y&#125;&amp;l=&#123;z&#125;&amp;tk="</span> + <span class="keyword">this</span>.mapKey,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// 注记服务</span></span><br><span class="line"><span class="keyword">let</span> tdt_cva = <span class="keyword">new</span> TileLayer(&#123;</span><br><span class="line">  className:<span class="string">'filter-class'</span>,<span class="comment">// 添加配置的样式Class</span></span><br><span class="line">  source: <span class="keyword">new</span> XYZ(&#123;</span><br><span class="line">    crossOrigin:<span class="string">'anonymous'</span>,</span><br><span class="line">    url: <span class="string">"http://t&#123;0-7&#125;.tianditu.com/DataServer?T=cva_w&amp;x=&#123;x&#125;&amp;y=&#123;y&#125;&amp;l=&#123;z&#125;&amp;tk="</span> + <span class="keyword">this</span>.mapKey,</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ul>
+<ol start="2">
+<li><p>第二种滤镜方式：通过<code>tileLoadFunction</code>直接将原始瓦片图替换成加了滤镜的瓦片图</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//底图服务</span></span><br><span class="line"><span class="keyword">let</span> tdt_vec = <span class="keyword">new</span> TileLayer(&#123;</span><br><span class="line">  source: <span class="keyword">new</span> XYZ(&#123;</span><br><span class="line">    crossOrigin:<span class="string">'anonymous'</span>,</span><br><span class="line">    url: <span class="string">"http://t&#123;0-7&#125;.tianditu.com/DataServer?T=vec_w&amp;x=&#123;x&#125;&amp;y=&#123;y&#125;&amp;l=&#123;z&#125;&amp;tk="</span> + <span class="keyword">this</span>.mapKey,</span><br><span class="line">    tileLoadFunction:<span class="keyword">this</span>.tileLoadFunction</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// 注记服务</span></span><br><span class="line"><span class="keyword">let</span> tdt_cva = <span class="keyword">new</span> TileLayer(&#123;</span><br><span class="line">  source: <span class="keyword">new</span> XYZ(&#123;</span><br><span class="line">    crossOrigin:<span class="string">'anonymous'</span>,</span><br><span class="line">    url: <span class="string">"http://t&#123;0-7&#125;.tianditu.com/DataServer?T=cva_w&amp;x=&#123;x&#125;&amp;y=&#123;y&#125;&amp;l=&#123;z&#125;&amp;tk="</span> + <span class="keyword">this</span>.mapKey,</span><br><span class="line">    tileLoadFunction:<span class="keyword">this</span>.tileLoadFunction</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">tileLoadFunction</span> (<span class="params">imageTile, src</span>) </span>&#123;</span><br><span class="line">  <span class="comment">//第2种方式</span></span><br><span class="line">  <span class="comment">// 获取原始瓦片图片信息</span></span><br><span class="line">  <span class="keyword">let</span> img = <span class="keyword">new</span> Image()</span><br><span class="line">  img.setAttribute(<span class="string">'crossOrigin'</span>,<span class="string">'anonymous'</span>)</span><br><span class="line">  img.onload = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 设置canvas画布将图片信息绘制上去</span></span><br><span class="line">    <span class="keyword">let</span> canvas = <span class="built_in">document</span>.createElement(<span class="string">'canvas'</span>)</span><br><span class="line">    <span class="keyword">let</span> ctx = canvas.getContext(<span class="string">'2d'</span>)</span><br><span class="line">    <span class="keyword">let</span> w = img.width</span><br><span class="line">    <span class="keyword">let</span> h = img.height</span><br><span class="line">    canvas.width = w</span><br><span class="line">    canvas.height = h</span><br><span class="line">    <span class="comment">// 设置canvas滤镜</span></span><br><span class="line">    ctx.filter = <span class="string">"grayscale(98%) invert(100%) sepia(20%) hue-rotate(180deg) saturate(1600%) brightness(80%) contrast(90%)"</span></span><br><span class="line">    ctx.drawImage(img, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line">    <span class="comment">// canvas绘制的图像替换原有图片信息</span></span><br><span class="line">    imageTile.getImage().src = canvas.toDataURL(<span class="string">'image/png'</span>);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">  img.src = src</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<h4 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h4><p><img src="https://s2.loli.net/2024/09/01/c32MmfyNlsAIHiL.png" alt="image-20240901151022830"></p>
+<p>&emsp; &emsp; 上述两种方式都可以实现改变底图颜色的需求，但实现的逻辑有所区别。<code>className</code>是在<code>canvas</code>节点添加了滤镜，作用到载入画布的所有图像，不作用于原始瓦片。<code>tileLoadFunction</code>则是将请求的原始瓦片用滤镜预处理一遍产生一张加了滤镜的新瓦片，然后再加到<code>canvas</code>中的。将两种实现方式的地图导出就能看到差异了。</p>
+<p>完整代码参见：<a href="https://github.com/gisShield/vue-map-demo" target="_blank" rel="noopener">GitHub</a></p>
+]]></content>
+      <categories>
+        <category>openlayers</category>
+      </categories>
+      <tags>
+        <tag>openlayers</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>空间分析判断以及坐标转换工具</title>
+    <url>/2021/05/09/geo-tools/</url>
+    <content><![CDATA[<h2 id="一、背景"><a href="#一、背景" class="headerlink" title="一、背景"></a>一、背景</h2><p> 记录自身在项目实践过程中编写的一些GIS常用工具，源码已上传<a href="https://github.com/gisShield/gis-tools" target="_blank" rel="noopener">GitHub</a>：</p><blockquote>
+<ol>
+<li>几何基本属性工具：提供几何的基本空间属性获取和操作</li>
+<li>坐标转换工具：提供百度，高德坐标系与标准坐标系的相互转化功能</li>
+<li>几何空间关系判断：提供几何关系（相交，包含等）判断</li>
+</ol>
+</blockquote><h2 id="二、工具类"><a href="#二、工具类" class="headerlink" title="二、工具类"></a>二、工具类</h2><h3 id="1、GeometryRelatedUtil"><a href="#1、GeometryRelatedUtil" class="headerlink" title="1、GeometryRelatedUtil"></a>1、GeometryRelatedUtil</h3><a id="more"></a>
+
+<h4 id="1-1、空间位置关系判断"><a href="#1-1、空间位置关系判断" class="headerlink" title="1.1、空间位置关系判断:"></a>1.1、空间位置关系判断:</h4><ul>
+<li>disjointGeo(geom1,geom2) 相离</li>
+</ul>
+<blockquote>
+<p>两个几何对象不相交，即不存在交点。</p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/fwSFoNszCPpq68K.png" alt="1566460266810.png"><br><img src="https://i.loli.net/2021/05/05/6XcWO4KYnexGyLC.png" alt="1566460298132.png"></p>
+<ul>
+<li>equalsGeo(geom1,geom2) 相等</li>
+</ul>
+<blockquote>
+<p>如果给定的几何图形“空间相等”，则返回TRUE 如果两个几何对象equal 为<code>TRUE</code></p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/COwdlmQBakDWxcX.png" alt="1566462696226.png"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">LINESTRING(0 0, 10 10) equal LINESTRING(0 0, 5 5, 10 10) = TRUE</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>touchesGeo(geom1,geom2) 相接</li>
+</ul>
+<blockquote>
+<p>几何是否至少有一个共同点，但它们的内部不相交。</p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/6OomZYjcTbqreuE.png" alt="1566460611494.png"></p>
+<ul>
+<li>intersectGeo(geom1,geom2) 相交</li>
+</ul>
+<blockquote>
+<p>如果两个几何对象在2D中空间相交（共享空间的任何部分）则返回<code>TRUE</code>，如果它们不共享则返回<code>FALSE</code>（它们是disjoint）</p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/u9XngaG5UOkHIWC.png" alt="1566462970387.png"></p>
+<ul>
+<li>withinGeo(geom1,geom2) 内含</li>
+</ul>
+<blockquote>
+<p>如果几何体A完全位于几何体B内，则返回<code>TRUE</code></p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/PleDyCqOGBisKcV.png" alt="1566460761487.png"></p>
+<p>6、containsGeo(geom1,geom2) 包含</p>
+<blockquote>
+<p>几何A包含几何B，当且仅当B的外部没有位于A的外部时，并且B的内部的至少一个点位于A的内部。<br>contain是within的反转。因此contain（A，B）意味着within（B，A）</p>
+<ul>
+<li><p>True</p>
+<p><img src="https://i.loli.net/2021/05/05/sSJxQXdVcZyW4eT.png" alt="1566460860357.png"></p>
+</li>
+<li><p>FALSE</p>
+<p><img src="https://i.loli.net/2021/05/05/iHBnjUZGd9th3NT.png" alt="1566460877857.png"></p>
+</li>
+</ul>
+</blockquote>
+<ul>
+<li>overlapsGeo(geom1,geom2) 交叠</li>
+</ul>
+<blockquote>
+<p>如果几何图形“空间重叠”，则返回<code>TRUE</code>。意思是它们相交，但一个并不完全包含另一个。</p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/Qkiel7zG23WqKFb.png" alt="1566462019814.png"></p>
+<ul>
+<li>coversGeo(geom1,geom2) 覆盖</li>
+</ul>
+<blockquote>
+<p>如果几何B中没有点在几何A之外，则返回 <code>TRUE</code></p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/WJcOsefnpUVBxbZ.png" alt="1566463381144.png"></p>
+<ul>
+<li>coveredByGeo(geom1,geom2) 被覆盖</li>
+</ul>
+<blockquote>
+<p>如果几何A中没有点在几何B之外，则返回 <code>TRUE</code></p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/bEInT6Of5XxaC4W.png" alt="1566463495663.png"></p>
+<ul>
+<li>crossesGeo(geom1,geom2) 交叉</li>
+</ul>
+<blockquote>
+<p>提供的几何是否有一些共同的内部点，但不是全部,则返回<code>TRUE</code>。</p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/Ff5X72gWPwUhuvk.png" alt="1566463597463.png"></p>
+<h4 id="1-2、空间叠加分析"><a href="#1-2、空间叠加分析" class="headerlink" title="1.2、空间叠加分析"></a>1.2、空间叠加分析</h4><p><img src="https://i.loli.net/2021/05/05/ldzAMkeThF7So84.jpg" alt="20160408164145720.jpg"></p>
+<ul>
+<li>geometryDifference(geom1,geom2) 差异分析</li>
+</ul>
+<blockquote>
+<p>差异分析，得到去除geom1 与geom2重叠部分剩下的geom1几何对象</p>
+</blockquote>
+<ul>
+<li>geometryUnion(geom1,geom2) 联合分析</li>
+</ul>
+<blockquote>
+<p>合并分析，得到几何对象geom1 和 geom2几何对象 合并成一个几何对象</p>
+</blockquote>
+<ul>
+<li>geometryIntersection(geom1,geom2) 交叉分析</li>
+</ul>
+<blockquote>
+<p>叠加分析，得到geom1几何对象和geom2几何对象叠加部分</p>
+</blockquote>
+<ul>
+<li>geometrySymdifference(geom1,geom2) 对称差异分析</li>
+</ul>
+<blockquote>
+<p>对称差异分析：得到去除geom1 与geom2重叠部分，剩下的geom1和geom2生成新的几何对象</p>
+</blockquote>
+<h3 id="2、GeometryBaseAnalysisUtil"><a href="#2、GeometryBaseAnalysisUtil" class="headerlink" title="2、GeometryBaseAnalysisUtil"></a>2、GeometryBaseAnalysisUtil</h3><p>1、getBuffer 获取缓冲区</p>
+<blockquote>
+<p>给定缓冲距离，生成缓冲区（当几何对象坐标系为地理坐标系，单位为度；当几何对象坐标系为投影坐标系，单位为米）</p>
+</blockquote>
+<p>2、getEnvelope  外包矩形</p>
+<blockquote>
+<p>获取当前几何对象的外包矩形</p>
+</blockquote>
+<p><img src="https://i.loli.net/2021/05/05/r5RDkW8P9zTXmlA.png" alt="1567423780546.png"></p>
+<p>3、convexHull  最小凸包多边形</p>
+<blockquote>
+<p>获取当前几何对象的最小凸包多边形</p>
+</blockquote>
+<p>4、getCentroid 获取质心点</p>
+<blockquote>
+<p>获取几何对象的质心点</p>
+</blockquote>
+<p>5、getLength 获取长度</p>
+<blockquote>
+<p>获取长度 线几何返回长度 面几何返回周长，其他返回0.0</p>
+</blockquote>
+<p>6、getArea 获取面积</p>
+<blockquote>
+<p>获取几何对象面积 面几何返回面积，其他几何返回0.0</p>
+</blockquote>
+<h3 id="3、CoordinateTransformUtil：坐标转换"><a href="#3、CoordinateTransformUtil：坐标转换" class="headerlink" title="3、CoordinateTransformUtil：坐标转换"></a>3、CoordinateTransformUtil：坐标转换</h3><blockquote>
+<p>坐标转换类 提供了BD09,GCJ02,WGS84等EPSG标准的坐标系相互转换功能</p>
+</blockquote>
+<ul>
+<li><p>transform(transformGeomBean)</p>
+<blockquote>
+<p>根据传入的 TransformGeomBean 进行坐标转换</p>
+</blockquote>
+</li>
+<li><p>transformFormOther2EPSG(geometry,source,target)</p>
+<blockquote>
+<p>给Geometry 从自定义坐标系转EPSG标准坐标系</p>
+</blockquote>
+</li>
+<li><p>transformFormEPSG2Other(geometry,source,target)</p>
+<blockquote>
+<p>给Geometry 从EPSG标准坐标系转自定义坐标系</p>
+</blockquote>
+</li>
+<li><p>transformForEPSG(geometry,source,target)</p>
+<blockquote>
+<p>Geometry EPSG标准坐标系相互转化</p>
+</blockquote>
+</li>
+<li><p>transformForOther(geometry,source,target)</p>
+<blockquote>
+<p>Geometry 自定义坐标系相互转化</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="三、基础类"><a href="#三、基础类" class="headerlink" title="三、基础类"></a>三、基础类</h2><ol>
+<li><p>BaseGeomBean：基本几何类型类</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>geomType</td>
+<td>GeomTypeEnum</td>
+<td>几何类型</td>
+</tr>
+<tr>
+<td>dataType</td>
+<td>DataTypeEnum</td>
+<td>数据类型</td>
+</tr>
+<tr>
+<td>coordinates</td>
+<td>String</td>
+<td>坐标串</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>TransformGeomBean：坐标转换基础类，继承自<code>BaseGeomBean</code></p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>fromCrsCode</td>
+<td>String</td>
+<td>几何对象源坐标系</td>
+</tr>
+<tr>
+<td>toCrsCode</td>
+<td>String</td>
+<td>几何目标坐标系</td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<ol start="3">
+<li><p>RelatedGeomBean：空间关系判断基础类，继承自<code>BaseGeomBean</code></p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>srid</td>
+<td>int</td>
+<td>坐标参考系<a href="http://epsg.io/" target="_blank" rel="noopener">EPSG代码</a></td>
+</tr>
+</tbody></table>
+</li>
+</ol>
+<h2 id="四、示例"><a href="#四、示例" class="headerlink" title="四、示例"></a>四、示例</h2><h3 id="1、分析"><a href="#1、分析" class="headerlink" title="1、分析"></a>1、分析</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> bean.RelatedGeomBean;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.geom.Coordinate;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.geom.Geometry;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.geom.GeometryCollection;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.io.ParseException;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.io.WKTWriter;</span><br><span class="line"><span class="keyword">import</span> enums.DataTypeEnum;</span><br><span class="line"><span class="keyword">import</span> enums.GeomTypeEnum;</span><br><span class="line"><span class="keyword">import</span> factory.GeoFactory;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> utils.CoordinateTransformUtil;</span><br><span class="line"><span class="keyword">import</span> utils.GeometryBaseAnalysisUtil;</span><br><span class="line"><span class="keyword">import</span> utils.GeometryRelatedUtil;</span><br><span class="line"><span class="keyword">import</span> utils.GeometryUtil;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> gisShield</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@title</span>: GeometryRelatedUtilTest</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@projectName</span> gis-tools</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@description</span>: TODO</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/5/4 12:04</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GeometryRelatedUtilTest</span> </span>&#123;</span><br><span class="line">    GeoFactory myGeometryFactory = <span class="keyword">new</span> GeoFactory();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">disjointGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">// 测试点线相离</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POINT);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        point1.setCoordinates(<span class="string">"119.440,30.324"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.LINE);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"LINESTRING (119.440 30.539, 119.440 30.156)"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"点相离判断："</span> + GeometryRelatedUtil.disjointGeo(geom1, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">equalsGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">// 测试线线相等</span></span><br><span class="line">        RelatedGeomBean relatedGeomBean1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        relatedGeomBean1.setGeomType(GeomTypeEnum.LINE);</span><br><span class="line">        relatedGeomBean1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        relatedGeomBean1.setCoordinates(<span class="string">"119.4401,30.539,119.440,30.156"</span>);</span><br><span class="line">        RelatedGeomBean relatedGeomBean2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        relatedGeomBean2.setGeomType(GeomTypeEnum.LINE);</span><br><span class="line">        relatedGeomBean2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        relatedGeomBean2.setCoordinates(<span class="string">"LINESTRING (119.440 30.539, 119.440 30.156)"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(relatedGeomBean1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(relatedGeomBean2);</span><br><span class="line">        System.out.println(<span class="string">"线线相等判断："</span> + GeometryRelatedUtil.equalsGeo(geom1, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">touchesGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">//测试线面相接</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.LINE);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// true 121.151931,30.284941,120.152074,30.295875</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.151931,30.284941,120.152074,30.295875"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"线面相接判断："</span> + GeometryRelatedUtil.touchesGeo(geom1, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">crossesTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">//测试线面交叉</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.LINE);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941,120.152074,30.295875</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.1815,30.2847,120.1448,30.2847"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"线面相接判断："</span> + GeometryRelatedUtil.crossesGeo(geom1, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">withinGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">//测试点在面内</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POINT);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.1595,30.2818"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"点在面内判断："</span> + GeometryRelatedUtil.withinGeo(geom1, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">containsGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">//测试面包含点</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POINT);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.1595,30.2818"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"面包含点判断："</span> + GeometryRelatedUtil.containsGeo(geom2, geom1));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">overlapsGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">//测试面面交叠</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.1554692,30.2872386,120.154711,30.280239,120.159814,30.279412,120.16834,30.28976,120.15899,30.29470,120.1554692,30.2872386"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"面面交叠判断："</span> + GeometryRelatedUtil.overlapsGeo(geom1, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">coversGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">//测试面面覆盖</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.MULTIPOLYGON);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.15547,30.28724,120.15471,30.28024,120.15981,30.27941,120.16398,30.28149,120.15905,30.28646,120.15547,30.28724;120.16425,30.28087,120.16036,30.27856,120.16539,30.27774,120.16425,30.28087"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"面面覆盖判断："</span> + GeometryRelatedUtil.coversGeo(geom2, geom1));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">coveredByGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">//测试线被面覆盖</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.MULTILINESTRING);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.15418,30.29101,120.15339,30.28739,120.15574,30.28856;120.15663,30.29011,120.17015,30.27718,120.15574,30.27698"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"线被面覆盖判断："</span> + GeometryRelatedUtil.coveredByGeo(geom1, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">intersectGeoTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">// 测试线面相交</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.MULTILINESTRING);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.15418,30.29101,120.15339,30.28739,120.15574,30.28856;120.15663,30.29011,120.17015,30.27718,120.15574,30.27698"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        System.out.println(<span class="string">"线面相交判断："</span> + GeometryRelatedUtil.intersectGeo(geom1, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">isInBufferTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean line = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        line.setGeomType(GeomTypeEnum.LINE);</span><br><span class="line">        line.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// true 121.151931,30.284941,120.152074,30.295875</span></span><br><span class="line">        line.setCoordinates(<span class="string">"120.151931,30.284941,120.152074,30.295875"</span>);</span><br><span class="line"></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POINT);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"121.1595,30.2818"</span>);</span><br><span class="line"><span class="comment">//        double angular = 1000.0/(Math.PI/180) / 6378137;</span></span><br><span class="line">        Geometry geom1 = CoordinateTransformUtil.transformForEPSG(myGeometryFactory.getGeometry(line), <span class="string">"EPSG:4326"</span>, <span class="string">"EPSG:3857"</span>);</span><br><span class="line">        Geometry geom2 = CoordinateTransformUtil.transformForEPSG(myGeometryFactory.getGeometry(point1), <span class="string">"EPSG:4326"</span>, <span class="string">"EPSG:3857"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// buffer 以坐标系为单位 坐标系以米为单位 则buffer 为米 ，坐标系以度为单位 则buffer 为度</span></span><br><span class="line">        Geometry geometry = GeometryBaseAnalysisUtil.getBuffer(geom1, <span class="number">0.000001</span>);</span><br><span class="line">        System.out.println(<span class="string">"缓冲区："</span> + GeometryRelatedUtil.isInBuffer(geometry, geom2));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">isWithinDistanceTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean line = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        line.setGeomType(GeomTypeEnum.LINE);</span><br><span class="line">        line.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        line.setSrid(<span class="number">4326</span>);</span><br><span class="line">        <span class="comment">// true 121.151931,30.284941,120.152074,30.295875</span></span><br><span class="line">        line.setCoordinates(<span class="string">"120.151931,30.284941,120.152074,30.295875"</span>);</span><br><span class="line"></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POINT);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        line.setSrid(<span class="number">4326</span>);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"121.1595,30.2818"</span>);</span><br><span class="line">        <span class="comment">// 进行米转度操作</span></span><br><span class="line">        <span class="keyword">double</span> angular = <span class="number">0.000001</span>;</span><br><span class="line">        System.out.println(angular);</span><br><span class="line">        Geometry geom1 = CoordinateTransformUtil.transformForEPSG(myGeometryFactory.getGeometry(line), <span class="string">"EPSG:4326"</span>, <span class="string">"EPSG:3857"</span>);</span><br><span class="line">        Geometry geom2 = CoordinateTransformUtil.transformForEPSG(myGeometryFactory.getGeometry(point1), <span class="string">"EPSG:4326"</span>, <span class="string">"EPSG:3857"</span>);</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="string">"缓冲区："</span> + GeometryRelatedUtil.isWithinDistance(geom1, geom2, angular));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">geometryDifferenceTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        <span class="comment">//测试面面交叠</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.1554692,30.2872386,120.154711,30.280239,120.159814,30.279412,120.16834,30.28976,120.15899,30.29470,120.1554692,30.2872386"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        Geometry geometry = GeometryRelatedUtil.geometryDifference(geom1, geom2);</span><br><span class="line">        System.out.println(<span class="string">"差异分析："</span> + geometry.getGeometryType());</span><br><span class="line">        List&lt;Coordinate&gt; coordinateList = GeometryUtil.getGeomCoordinates(geometry);</span><br><span class="line">        StringBuffer sb = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">        <span class="keyword">for</span> (Coordinate coord :</span><br><span class="line">                coordinateList) &#123;</span><br><span class="line">            sb.append(coord.x + <span class="string">" "</span> + coord.y + <span class="string">","</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(sb.toString());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">geometryUnionTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line"><span class="comment">//测试面面交叠</span></span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.1554692,30.2872386,120.154711,30.280239,120.159814,30.279412,120.16834,30.28976,120.15899,30.29470,120.1554692,30.2872386"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        Geometry geometry = GeometryRelatedUtil.geometryUnion(geom1, geom2);</span><br><span class="line">        System.out.println(<span class="string">"联合分析："</span> + geometry.getGeometryType());</span><br><span class="line">        List&lt;Coordinate&gt; coordinateList = GeometryUtil.getGeomCoordinates(geometry);</span><br><span class="line">        StringBuffer sb = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">        <span class="keyword">for</span> (Coordinate coord :</span><br><span class="line">                coordinateList) &#123;</span><br><span class="line">            sb.append(coord.x + <span class="string">" "</span> + coord.y + <span class="string">","</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(sb.toString());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">geometryIntersectionTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.1554692,30.2872386,120.154711,30.280239,120.159814,30.279412,120.16834,30.28976,120.15899,30.29470,120.1554692,30.2872386"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        Geometry geometry = GeometryRelatedUtil.geometryIntersection(geom1, geom2);</span><br><span class="line">        System.out.println(<span class="string">"交叉分析："</span> + geometry.getGeometryType());</span><br><span class="line">        List&lt;Coordinate&gt; coordinateList = GeometryUtil.getGeomCoordinates(geometry);</span><br><span class="line">        StringBuffer sb = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">        <span class="keyword">for</span> (Coordinate coord :</span><br><span class="line">                coordinateList) &#123;</span><br><span class="line">            sb.append(coord.x + <span class="string">" "</span> + coord.y + <span class="string">","</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(sb.toString());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">geometrySymdifferenceTest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean point1 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point1.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point1.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        <span class="comment">// false 120.151931,30.284941</span></span><br><span class="line">        point1.setCoordinates(<span class="string">"120.1554692,30.2872386,120.154711,30.280239,120.159814,30.279412,120.16834,30.28976,120.15899,30.29470,120.1554692,30.2872386"</span>);</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point1);</span><br><span class="line">        Geometry geom2 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        Geometry geometry = GeometryRelatedUtil.geometrySymdifference(geom1, geom2);</span><br><span class="line">        System.out.println(<span class="string">"对称差异分析："</span> + geometry.getGeometryType());</span><br><span class="line">        List&lt;List&lt;Coordinate&gt;&gt; coordinateList = GeometryUtil.getGeomCoordinates((GeometryCollection) geometry);</span><br><span class="line">        <span class="keyword">for</span> (List&lt;Coordinate&gt; coordList :</span><br><span class="line">                coordinateList) &#123;</span><br><span class="line">            StringBuffer sb = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">            <span class="keyword">for</span> (Coordinate coord :</span><br><span class="line">                    coordList) &#123;</span><br><span class="line">                sb.append(coord.x + <span class="string">" "</span> + coord.y + <span class="string">","</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println(sb.toString());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getEnvelope</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        Geometry geometry = GeometryBaseAnalysisUtil.getEnvelope(geom1);</span><br><span class="line">        WKTWriter wktWriter = <span class="keyword">new</span> WKTWriter();</span><br><span class="line">        System.out.println(wktWriter.write(geometry));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">convexHull</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        Geometry geometry = GeometryBaseAnalysisUtil.convexHull(geom1);</span><br><span class="line">        WKTWriter wktWriter = <span class="keyword">new</span> WKTWriter();</span><br><span class="line">        System.out.println(wktWriter.write(geometry));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getCentroid</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(point2);</span><br><span class="line">        Geometry geometry = GeometryBaseAnalysisUtil.getCentroid(geom1);</span><br><span class="line">        WKTWriter wktWriter = <span class="keyword">new</span> WKTWriter();</span><br><span class="line">        System.out.println(wktWriter.write(geometry));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getLength</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = CoordinateTransformUtil.transformForEPSG(myGeometryFactory.getGeometry(point2), <span class="string">"EPSG:4326"</span>, <span class="string">"EPSG:3857"</span>);</span><br><span class="line">        <span class="keyword">double</span> length = GeometryBaseAnalysisUtil.getLength(geom1);</span><br><span class="line"></span><br><span class="line">        System.out.println(length);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getArea</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean point2 = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        point2.setGeomType(GeomTypeEnum.POLYGON);</span><br><span class="line">        point2.setDataType(DataTypeEnum.WKT);</span><br><span class="line">        point2.setCoordinates(<span class="string">"POLYGON ((120.152074 30.295875, 120.151816 30.276156, 120.176707 30.275637, 120.152074 30.295875))"</span>);</span><br><span class="line">        Geometry geom1 = CoordinateTransformUtil.transformForEPSG(myGeometryFactory.getGeometry(point2), <span class="string">"EPSG:4326"</span>, <span class="string">"EPSG:3857"</span>);</span><br><span class="line">        <span class="keyword">double</span> area = GeometryBaseAnalysisUtil.getArea(geom1);</span><br><span class="line">        System.out.println(String.valueOf(area));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">geojson2Geom</span><span class="params">()</span> <span class="keyword">throws</span> IOException, ParseException </span>&#123;</span><br><span class="line">        RelatedGeomBean relatedGeomBean = <span class="keyword">new</span> RelatedGeomBean();</span><br><span class="line">        relatedGeomBean.setGeomType(GeomTypeEnum.POINT);</span><br><span class="line">        relatedGeomBean.setDataType(DataTypeEnum.GEOJSON);</span><br><span class="line">        relatedGeomBean.setCoordinates(<span class="string">"&#123;\"type\":\"Feature\",\"geometry\":&#123;\"type\":\"Point\",\"coordinates\":[102,0.5]&#125;,\"properties\":&#123;\"prop0\":\"value0\"&#125;&#125;"</span>);</span><br><span class="line">        Geometry geom1 = myGeometryFactory.getGeometry(relatedGeomBean);</span><br><span class="line">        System.out.println(GeometryUtil.getGeomCoordinatesString(geom1));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="2、坐标转换"><a href="#2、坐标转换" class="headerlink" title="2、坐标转换"></a>2、坐标转换</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> bean.TransformGeomBean;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.geom.Geometry;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.geom.GeometryCollection;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.io.ParseException;</span><br><span class="line"><span class="keyword">import</span> com.vividsolutions.jts.io.WKTWriter;</span><br><span class="line"><span class="keyword">import</span> enums.DataTypeEnum;</span><br><span class="line"><span class="keyword">import</span> enums.GeomTypeEnum;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.opengis.referencing.FactoryException;</span><br><span class="line"><span class="keyword">import</span> org.opengis.referencing.operation.TransformException;</span><br><span class="line"><span class="keyword">import</span> utils.CoordinateTransformUtil;</span><br><span class="line"><span class="keyword">import</span> utils.GeometryUtil;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> gisShield</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@title</span>: CoordinateTransformUtilTest</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@projectName</span> gis-tools</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@description</span>: TODO</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/5/4 12:06</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CoordinateTransformUtilTest</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 坐标转换</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> FactoryException</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> TransformException</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> ParseException</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> IOException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">transform</span><span class="params">()</span> <span class="keyword">throws</span> FactoryException, TransformException, ParseException, IOException </span>&#123;</span><br><span class="line">        TransformGeomBean transformGeomBean = <span class="keyword">new</span> TransformGeomBean();</span><br><span class="line">        transformGeomBean.setFromCrsCode(<span class="string">"gcj02"</span>);</span><br><span class="line">        transformGeomBean.setToCrsCode(<span class="string">"EPSG:4326"</span>);</span><br><span class="line">        transformGeomBean.setCoordinates(<span class="string">"119.695947,30.202053,119.697097,30.20237,119.698332,30.202705,119.700422,30.203293,119.704157,30.204344,119.705496,30.204728,119.705912,30.204865,119.706183,30.204981,119.706381,30.205087,119.706614,30.205224,119.706955,30.205442,119.707277,30.205704,119.707634,30.20601,119.708076,30.206392,119.708519,30.206779,119.708811,30.20706,119.709262,30.207581,119.709664,30.208112,119.709927,30.208511,119.710211,30.209005,119.710412,30.209445,119.710576,30.209832,119.71071,30.210208,119.710895,30.211047,119.711008,30.211733,119.711064,30.212178,119.711078,30.212482,119.711072,30.21276,119.71104,30.213008,119.711002,30.213253,119.710863,30.213995,119.710589,30.215003,119.709191,30.219181,119.708362,30.221611,119.707681,30.223528,119.707176,30.224967,119.706829,30.225965,119.706768,30.226162,119.706728,30.226326,119.706696,30.226499,119.706676,30.22662,119.706659,30.226703,119.706441,30.227561,119.706218,30.228427,119.706099,30.228898,119.705829,30.229964,119.705705,30.230543,119.705622,30.230981,119.705561,30.231484,119.705539,30.231924,119.705526,30.232274,119.705547,30.232615,119.70559,30.2329,119.705689,30.233201,119.705845,30.233488,119.706062,30.233774,119.706309,30.234045,119.706561,30.23426,119.706797,30.234443,119.707173,30.234668,119.707674,30.234911,119.708368,30.235188,119.709023,30.235401,119.709635,30.235588,119.710333,30.235801,119.71095,30.236007,119.711454,30.236213,119.712342,30.236616,119.714697,30.237752,119.721277,30.240471,119.7271,30.242904,119.729519,30.243933,119.730468,30.244311,119.73082,30.244449,119.731046,30.244524,119.731256,30.24458,119.731434,30.244613,119.731622,30.244625,119.731838,30.244627,119.732145,30.244621,119.732915,30.244619,119.736877,30.244544,119.73742,30.244554,119.738323,30.244543,119.739236,30.244527,119.739916,30.244526,119.740268,30.244531,119.740643,30.244568,119.741115,30.244628,119.741657,30.244737,119.742153,30.244876,119.742639,30.24505,119.742929,30.245168,119.743178,30.245286,119.743374,30.245395,119.743556,30.245513,119.743733,30.245647,119.743961,30.24584,119.744194,30.246045,119.744554,30.246365,119.745793,30.247447,119.747059,30.248555,119.747948,30.249365,119.74821,30.249586,119.748455,30.249803,119.748637,30.249957,119.748937,30.250207,119.753115,30.253721,119.754242,30.25461,119.755013,30.255264,119.755663,30.255795,119.75632,30.256319,119.756687,30.256583,119.756982,30.256792,119.757401,30.257072,119.757822,30.257304,119.758356,30.257517,119.758962,30.257688,119.75982,30.25782,119.760972,30.257876,119.762155,30.257873,119.763383,30.257883,119.764346,30.257922,119.765068,30.25798,119.765729,30.258065,119.766231,30.258155,119.76677,30.258264,119.767269,30.258382,119.767747,30.258509,119.768511,30.258736,119.773253,30.26024,119.77384,30.260407,119.774747,30.26062,119.775369,30.260767,119.77605,30.260916,119.776595,30.260992,119.777116,30.261065,119.778044,30.261183,119.779904,30.261439,119.780778,30.261583,119.781116,30.261629,119.781391,30.261651,119.781679,30.261661,119.782346,30.261668,119.782984,30.261663,119.783653,30.261634,119.78464,30.261563,119.785138,30.261535,119.78646,30.261491,119.787123,30.261454,119.787659,30.261408,119.78844,30.261353,119.788943,30.261331,119.789456,30.261312,119.789843,30.261302,119.790197,30.261279,119.790877,30.261235,119.791227,30.261208,119.791646,30.261189,119.792113,30.261159,119.792631,30.26112,119.794931,30.260942,119.797001,30.260685,119.805287,30.259621,119.806355,30.259498,119.806945,30.259433,119.813779,30.258921,119.815312,30.258774,119.816241,30.258649,119.816711,30.258581,119.817058,30.258518,119.81768,30.258383,119.820153,30.25794,119.822294,30.257532,119.823101,30.25736,119.823483,30.257278,119.823789,30.257208,119.824622,30.257069,119.825131,30.257022,119.825641,30.256969,119.826467,30.256918,119.826999,30.256895,119.827557,30.256869,119.828001,30.256857,119.828472,30.256856,119.828928,30.256867,119.830969,30.256897,119.831957,30.256923,119.83318,30.256965,119.834083,30.256999,119.836057,30.257015,119.838423,30.257075,119.84133,30.257128,119.844047,30.257186,119.846875,30.257184,119.851783,30.257172,119.854063,30.257202,119.858164,30.257184,119.85991,30.257168,119.86098,30.257149,119.861586,30.257133,119.862144,30.257084,119.862831,30.257006,119.863402,30.256913,119.864169,30.256762,119.864759,30.256637,119.865425,30.256468,119.866079,30.25628,119.866734,30.256037,119.867587,30.255703,119.868442,30.255314,119.869412,30.254818,119.870017,30.254466,119.870607,30.254086,119.872204,30.253034,119.873371,30.252256,119.874281,30.251604,119.875312,30.250889,119.87562,30.2507,119.876344,30.250331,119.876573,30.250238,119.876761,30.250181,119.877014,30.250115,119.877308,30.250042,119.877828,30.249918,119.878316,30.249779,119.878796,30.249646,119.88211,30.248744,119.883698,30.248341,119.884808,30.248112,119.885602,30.247977,119.886525,30.247848,119.887338,30.247727,119.887914,30.247646,119.888539,30.247588,119.88906,30.247551,119.892506,30.247373,119.894695,30.247261,119.896792,30.247183,119.897348,30.24717,119.897686,30.247149,119.898002,30.24711,119.898584,30.247017,119.899019,30.246927,119.899166,30.24689,119.899603,30.246777,119.900051,30.246663,119.900311,30.246594,119.900574,30.246515,119.900825,30.246435,119.901036,30.246355,119.901431,30.246194,119.901746,30.246074,119.902599,30.245765,119.912384,30.242387,119.91295,30.242236,119.913578,30.2421,119.914508,30.241928,119.915005,30.241861,119.915415,30.241819,119.91729,30.241662,119.920666,30.241449,119.921361,30.241402,119.92171,30.241381,119.923086,30.241307,119.923907,30.241282,119.924341,30.241293,119.924682,30.241316,119.925012,30.241358,119.925339,30.241416,119.925741,30.241509,119.926179,30.241632,119.926589,30.241764,119.927329,30.242026,119.927904,30.242286,119.929447,30.243033,119.930981,30.243771,119.931512,30.244046,119.9396,30.248071,119.943264,30.249953,119.944326,30.250458,119.945072,30.25075,119.945436,30.250866,119.945823,30.250947,119.946434,30.251049,119.947024,30.251118,119.947475,30.251139,119.948003,30.251134,119.948714,30.251065,119.949285,30.250961,119.950036,30.250803,119.950712,30.250629,119.95131,30.250432,119.951892,30.250198,119.952635,30.24989,119.954486,30.249163,119.955111,30.248923,119.955554,30.248755,119.955998,30.248584,119.95648,30.248387,119.958687,30.247567,119.959838,30.247226,119.960213,30.247122,119.960476,30.247057,119.96071,30.247029,119.960876,30.247013,119.961045,30.247004,119.961222,30.247015,119.961418,30.247045,119.961597,30.247094,119.961774,30.247168,119.96197,30.247268,119.96211,30.247358,119.96223,30.247446,119.962327,30.247551,119.962426,30.247671,119.962566,30.247884,119.962807,30.248355,119.966707,30.255987,119.968489,30.259422,119.968843,30.260134,119.969202,30.260846,119.969543,30.261423,119.969699,30.261627,119.969841,30.261764,119.970004,30.261868,119.970133,30.261918,119.970254,30.261948,119.970405,30.261968,119.970554,30.261973,119.970734,30.261968,119.971013,30.261954,119.971346,30.261931,119.971898,30.26188,119.972842,30.261786,119.97382,30.261695,119.988704,30.260347,119.990975,30.260213,119.992117,30.260136"</span>);</span><br><span class="line">        transformGeomBean.setGeomType(GeomTypeEnum.LINE);</span><br><span class="line">        transformGeomBean.setDataType(DataTypeEnum.BASE);</span><br><span class="line">        Geometry geometry = CoordinateTransformUtil.transform(transformGeomBean);</span><br><span class="line">        <span class="keyword">if</span> (GeometryUtil.isGeometryCollection(geometry)) &#123;</span><br><span class="line">            System.out.println(GeometryUtil.getGeomCoordinatesString((GeometryCollection) geometry));</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            WKTWriter wktWriter = <span class="keyword">new</span> WKTWriter();</span><br><span class="line">            System.out.println(wktWriter.write(geometry));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>空间分析</tag>
+        <tag>坐标转换</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>【笔记二】将Springboot 程序注册成Win服务</title>
+    <url>/2021/01/23/springboot-to-service/</url>
+    <content><![CDATA[<h4 id="一、前期准备"><a href="#一、前期准备" class="headerlink" title="一、前期准备"></a>一、前期准备</h4><ol>
+<li><p>Java 运行环境，配置环境变量等（这是<code>jar</code>包运行的必备环境）</p>
+</li>
+<li><p><a href="https://github.com/winsw/winsw" target="_blank" rel="noopener">Winsw</a>程序（本章主角）</p>
+</li>
+</ol><h4 id="二、注册步骤"><a href="#二、注册步骤" class="headerlink" title="二、注册步骤"></a>二、注册步骤</h4><ol>
+<li><p><a href="https://github.com/winsw/winsw" target="_blank" rel="noopener">下载安装包</a>：（这里下载最新的，可以按照需要下载自己需要的版本）</p>
+<p><img src="https://i.loli.net/2021/01/23/heRHBs8Uil17NzY.png" alt="image-20201215155347679.png"></p>
+<ul>
+<li>可以看到又很多<code>.NET</code>版本，<strong>可以先查看自身电脑<code>.NET</code>版本 再去下载对应版本</strong>。如果都没有的话，可以选择<code>.NETCore31</code>的版本，这个是带了<code>.NET 3.1</code>（以下是<code>README</code>写到的）</li>
+</ul>
+<p><img src="https://i.loli.net/2021/01/23/8wBq1Jt3IEyNMxH.png" alt="image-20201215160908858.png"></p>
+<ul>
+<li>查看自身<code>.NET</code>版本方法 ：<br>打开资源管理器，输入<code>C:\Windows\Microsoft.NET\Framework</code></li>
+</ul>
+<p><img src="https://i.loli.net/2021/01/23/9tz61sDIOkeiv8x.png" alt="image-20201218172534768.png"></p>
+<ul>
+<li>下载对应版本的exe 以及xml：</li>
+</ul>
+<p><img src="https://i.loli.net/2021/01/23/t37cRsvNf8JUkFL.png" alt="image-20201218173541362.png"></p>
+</li>
+</ol><a id="more"></a>
+
+<ol start="2">
+<li><p>安装</p>
+<p>官方给出了<a href="https://github.com/winsw/winsw/blob/master/doc/installation.md" target="_blank" rel="noopener">安装指南</a>：</p>
+<p><img src="https://i.loli.net/2021/01/23/zIY2KXuygHGdUvM.png" alt="image-20201218172925043.png"></p>
+</li>
+</ol>
+<p>   步骤如下：</p>
+<ul>
+<li><p>将下载下来的exe 和 xml 放在<code>jar</code>同级目录下</p>
+<p><img src="https://i.loli.net/2021/01/23/KJCE1h6XrWyHoGv.png" alt="image-20201218174950800.png"></p>
+</li>
+<li><p>更改exe 和 xml 的文件名改为和<code>jar</code> 同名。（假如我的项目名为<code>install-service.jar</code> 则将 exe 和 xml 改名为<code>install-service.exe</code> 和 <code>install-service.xml</code>）</p>
+</li>
+<li><p>编辑xml 填写相关配置</p>
+<p><img src="https://i.loli.net/2021/01/23/aEQuIAN8iF9mTOd.png" alt="image-20201218175937848.png"></p>
+</li>
+<li><p>使用命令行 执行</p>
+<p><img src="https://i.loli.net/2021/01/23/GpKZ2OQmHIo4Pv3.png" alt="image-20201218180038791.png"></p>
+</li>
+<li><p>去服务查看下 找到服务 点击启动即可</p>
+<p><img src="https://i.loli.net/2021/01/23/L9YpxncAE5CuDzH.png" alt="image-20201218180132409.png"></p>
+</li>
+<li><p>访问自己的项目，查看是否启动成功</p>
+<p><img src="https://i.loli.net/2021/01/23/LVTEAaJDvcRO18p.png" alt="image-20201218180224985.png"></p>
+</li>
+</ul>
+<ol start="3">
+<li><p>卸载</p>
+<p><img src="https://i.loli.net/2021/01/23/Rv3fsbFhiM4Qt6p.png" alt="image-20201222093918592.png"></p>
+</li>
+</ol>
+<h4 id="三、其他"><a href="#三、其他" class="headerlink" title="三、其他"></a>三、其他</h4><p>除了可以将Springboot 程序注册成服务，它也可以用于其他程序注册成服务（比如 Nginx 也可以通过它注册成服务），包装万物成服务</p>
+]]></content>
+      <categories>
+        <category>笔记</category>
+      </categories>
+      <tags>
+        <tag>笔记</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>笔记【一】：MapBox 加载 ArcGIS 的WMS 服务跨域问题解决</title>
+    <url>/2020/02/22/note-arcgisserver-cors/</url>
+    <content><![CDATA[<h5 id="1-环境："><a href="#1-环境：" class="headerlink" title="1. 环境："></a>1. 环境：</h5><hr><ul>
+<li>ArcGIS Server 10.2</li>
+<li>MapBox-GL v 1.7</li>
+</ul><h5 id="2-问题描述："><a href="#2-问题描述：" class="headerlink" title="2. 问题描述："></a>2. 问题描述：</h5><hr><p>在使用ArcGIS 发布一个WMS 服务，同时用OpenLayers,LeafLet以及MapBox 加载，在OpenLayers和LeafLet 中均可正常加载，但在MapBox 中加载出现跨域请求现象</p><a id="more"></a>
+
+
+
+<p><img src="https://i.loli.net/2020/02/22/vd584MATnaHZB6S.png" alt="跨域报错"></p>
+<h5 id="3-产生原因："><a href="#3-产生原因：" class="headerlink" title="3.产生原因："></a>3.产生原因：</h5><hr>
+<p>通过查找文档以及Mapbox的GitHub 的issues 找到相关解释：<a href="https://github.com/mapbox/mapbox-gl-js/issues/2171" target="_blank" rel="noopener">原Issue</a></p>
+<p><img src="https://i.loli.net/2020/02/22/Is87CR1pvBS3MdD.png" alt="issue"></p>
+<p>读下来的大致意思是：mapbox 加载WMS是需要读取 image里的数据，但只有服务器允许跨域的情况下我们才可以这么做。而LeafLet 不需要读取数据，所以可以直接加载。</p>
+<p>那么知道产生原因，问题就好解决了。</p>
+<h5 id="4-解决方案"><a href="#4-解决方案" class="headerlink" title="4. 解决方案"></a>4. 解决方案</h5><ol>
+<li><p>下载 <a href="http://www.java2s.com/Code/Jar/c/Downloadcorsfilter17jar.htm" target="_blank" rel="noopener"><code>cors-filter-1.7.jar</code></a> 以及 <a href="http://www.java2s.com/example/jar/j/download-javapropertyutils19jar-file.html" target="_blank" rel="noopener"><code>java-property-utils-1.9.jar</code></a> 这两个jar 包用于设置Tomcat的跨域。</p>
+</li>
+<li><p>找到ArcGIS 安装目录下的<code>&lt;安装目录&gt;\framework\runtime\tomcat\lib</code> 将下载的jar 拷贝到该目录下<img src="https://i.loli.net/2020/02/22/KELbac8XRJAGTqw.png" alt="新加jar"></p>
+</li>
+<li><p>修改tomcat配置<code>&lt;安装目录&gt;\framework\runtime\tomcat\conf\web.xm</code></p>
+</li>
+<li><p>找到<code>&lt;filter&gt;</code> 同级的末尾追加如下XML代码：</p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CORS<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>com.thetransactioncompany.cors.CORSFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.allowOrigin<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>*<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.supportedMethods<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>GET, POST, HEAD, PUT, DELETE<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.supportedHeaders<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>Accept, Origin, X-Requested-With, Content-Type, Last-Modified<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.exposedHeaders<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>Set-Cookie<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">init-param</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-name</span>&gt;</span>cors.supportsCredentials<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">init-param</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br><span class="line"></span><br><span class="line">	<span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CORS<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>找到window的服务，重启ArcGIS Server 服务<img src="https://i.loli.net/2020/02/22/duERTZomwyb4krB.png" alt="重启服务"></p>
+</li>
+<li><p>再次使用Mapbox 请求验证问题，已经可以正常请求到WMS服务。<img src="https://i.loli.net/2020/02/22/pMxzBHC78ZKwJVa.png" alt="效果.png"></p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>笔记</category>
+      </categories>
+      <tags>
+        <tag>笔记</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>OpenLayers 基础 一：了解并简单构建</title>
+    <url>/2019/11/20/openlayers-start/</url>
+    <content><![CDATA[<h5 id="一、介绍"><a href="#一、介绍" class="headerlink" title="一、介绍"></a>一、介绍</h5><blockquote>
+<p>现在互联网地图（<a href="http://lbsyun.baidu.com/" target="_blank" rel="noopener">百度地图</a>，<a href="https://lbs.amap.com/" target="_blank" rel="noopener">高德地图</a>）都提供了很好的API使用，简单易懂，可以很快的通过文档构建自己的地图显示。但是有些时候项目和产品中需要离线的地图展示，本系列文章只讲述项目中比较常用的一些知识点，不会对每个组件进行详细的介绍。</p>
+</blockquote><hr><p>OpenLayers 是一个开源的Web地图库,主要用于在Web段创建可交互式二维地图。本系列以6.0.1的版本进行讲解。</p><a id="more"></a>
+
+
+<p>官网：<a href="https://openlayers.org/" target="_blank" rel="noopener">OpenLayers</a></p>
+<p>源码：<a href="https://github.com/openlayers/openlayers" target="_blank" rel="noopener">GitHub</a></p>
+<h5 id="二、核心组件"><a href="#二、核心组件" class="headerlink" title="二、核心组件"></a>二、核心组件</h5><hr>
+<p><img src="https://i.loli.net/2019/11/20/soCPGMFzjB7wnLT.png" alt="组件构成"></p>
+<ol>
+<li>Map:一个入口，用于组织和管理各个组件对象，最后渲染成地图。</li>
+<li>View：用于控制地图中心点，显示范围，显示层级等</li>
+<li>Layers：主要用于生成不同种类的图层，进行叠加展示</li>
+<li>Controls：提供不同种类的交互控件（也可以自定义控件），用来实现用户通过控件和地图交互，或者用于提供一些信息。控件会固定在页面一个位置，不会跟随地图改变而改变位置。</li>
+<li>Interactions：用来定义用户和地图交互功能和交互方式。</li>
+<li>Sources：数据源，用来给Layers提供源数据，每一个Layers 都会有一个对应的Source用以提供数据。</li>
+</ol>
+<h5 id="三、快速开始"><a href="#三、快速开始" class="headerlink" title="三、快速开始"></a>三、快速开始</h5><hr>
+<ol>
+<li><p>npm引入</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">npm install ol</span><br></pre></td></tr></table></figure>
+
+<p>或者你可以选择CDN引入方式</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v6.0.1/build/ol.js"</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">href</span>=<span class="string">"https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v6.0.1/css/ol.css"</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="2">
+<li><p>构建一个html</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">"en"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>OpenLayers<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css">        <span class="selector-id">#map</span> &#123;</span></span><br><span class="line">            width: 1000px;</span><br><span class="line">            height: 800px;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--  地图容器--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"map"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 引入初始化地图的JS--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"./js/demoMap.js"</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="3">
+<li><p>创建地图</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">'ol/ol.css'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123;<span class="built_in">Map</span>, View&#125; <span class="keyword">from</span> <span class="string">'ol'</span>;</span><br><span class="line"><span class="keyword">import</span> TileLayer <span class="keyword">from</span> <span class="string">'ol/layer/Tile'</span>;</span><br><span class="line"><span class="keyword">import</span> OSM <span class="keyword">from</span> <span class="string">'ol/source/OSM'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> map = <span class="keyword">new</span> <span class="built_in">Map</span>(&#123;</span><br><span class="line">    target: <span class="string">'map'</span>, <span class="comment">// 地图容器Id</span></span><br><span class="line">    <span class="comment">// 展示的图层</span></span><br><span class="line">    layers: [</span><br><span class="line">        <span class="keyword">new</span> TileLayer(&#123;</span><br><span class="line">            <span class="comment">// 数据源</span></span><br><span class="line">            source: <span class="keyword">new</span> OSM()</span><br><span class="line">        &#125;)</span><br><span class="line">    ],</span><br><span class="line">    <span class="comment">// 视图</span></span><br><span class="line">    view: <span class="keyword">new</span> View(&#123;</span><br><span class="line">        <span class="comment">// 中心点</span></span><br><span class="line">        center: [<span class="number">0</span>, <span class="number">0</span>],</span><br><span class="line">        <span class="comment">// 初始层级</span></span><br><span class="line">        zoom: <span class="number">0</span></span><br><span class="line">    &#125;)</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>这样就可以形成一个简单的地图出来</p>
+<p><img src="https://i.loli.net/2019/11/20/ObCEkrVJlRALqtv.png" alt="地图"></p>
+<hr>
+<h5 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h5><p>通过上面的 <em>快速开始</em> 可以看出，构建一个地图需要的必备属性：</p>
+<ul>
+<li>target ：地图容器的DIV</li>
+<li>view ：视图控制地图层级和中心点</li>
+<li>layers ：地图图层</li>
+</ul>
+<p>只要这三个部分组织完毕，一个基本的地图应用就可以使用了。</p>
+]]></content>
+      <categories>
+        <category>openlayers</category>
+      </categories>
+      <tags>
+        <tag>openlayers</tag>
+      </tags>
+  </entry>
+</search>
